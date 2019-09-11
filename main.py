@@ -49,17 +49,17 @@ def main(_):
      labels_, labels_valid_, labels_test_) = \
         prepare_data(FLAGS.time_len, FLAGS.n, FLAGS.input_size,
                      seed=FLAGS.seed)
-
-    # initialize model & build TF graph
-    model = CudnnLSTMModel(FLAGS.input_size,
-                           FLAGS.num_layers, FLAGS.num_units, FLAGS.direction,
-                           FLAGS.learning_rate, FLAGS.dropout, FLAGS.seed,
-                           is_training=True)
-    # training
-    model.train(inputs_, inputs_valid_, labels_, labels_valid_,
-                FLAGS.batch_size, FLAGS.num_epochs)
-    # evalutation on test set
-    model.eval(inputs_test_, labels_test_)
+    with tf.device('/device:GPU:0'):
+        # initialize model & build TF graph
+        model = CudnnLSTMModel(FLAGS.input_size,
+                               FLAGS.num_layers, FLAGS.num_units, FLAGS.direction,
+                               FLAGS.learning_rate, FLAGS.dropout, FLAGS.seed,
+                               is_training=True)
+        # training
+        model.train(inputs_, inputs_valid_, labels_, labels_valid_,
+                    FLAGS.batch_size, FLAGS.num_epochs)
+        # evalutation on test set
+        model.eval(inputs_test_, labels_test_)
 
 
 if __name__ == "__main__":
