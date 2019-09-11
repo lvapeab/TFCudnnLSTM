@@ -10,6 +10,7 @@ Author: YJ Choe (yjchoe33@gmail.com).
 """
 
 import tensorflow as tf
+from tensorflow.python.client import timeline
 
 from tqdm import tqdm
 
@@ -161,6 +162,12 @@ class CudnnLSTMModel:
                             options=tf.compat.v1.RunOptions(trace_level=tf.RunOptions.FULL_TRACE),
                             run_metadata=run_meta)
                         profiler.add_step(batch, run_meta)
+
+                        # Create the Timeline object, and write it to a json file
+                        fetched_timeline = timeline.Timeline(run_meta.step_stats)
+                        chrome_trace = fetched_timeline.generate_chrome_trace_format()
+                        with open('profiler/timeline_%i.json'%batch, 'w') as f:
+                            f.write(chrome_trace)
 
                         # Profile the parameters of your model.
                         profiler.profile_name_scope(options=(tf.compat.v1.profiler.ProfileOptionBuilder
