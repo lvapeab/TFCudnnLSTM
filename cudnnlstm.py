@@ -274,7 +274,7 @@ class CudnnGRUModel:
         self.dropout = dropout
         self.seed = seed
 
-        self.model_name = "cudnngru-{}-{}-{}-{}-{}".format(
+        self.model_name = "cudnnlstm-{}-{}-{}-{}-{}".format(
             self.num_layers, self.num_units, self.direction,
             self.learning_rate, self.dropout)
         self.save_path = "./outputs/{}.ckpt".format(self.model_name)
@@ -380,7 +380,7 @@ class CudnnGRUModel:
             writer = tf.summary.FileWriter("logdir/{}".format(self.model_name),
                                            graph=tf.get_default_graph())
 
-            print("========Training CudnnLSTM with "
+            print("========Training CudnnGRU with "
                   "{} layers and {} units=======".format(self.num_layers,
                                                          self.num_units))
 
@@ -390,59 +390,61 @@ class CudnnGRUModel:
                 print("Epoch {}:".format(epoch))
                 for batch in tqdm(range(n_train // batch_size)):
                     current = batch * batch_size
-                    if batch % 10 == 0:
-                        run_meta = tf.compat.v1.RunMetadata()
-                        _, summary, gs = sess.run(
-                            [self.train_op, self.summary, self.global_step],
-                            feed_dict={
-                                self.inputs:
-                                    inputs_[:, current:current+batch_size, :],
-                                self.labels:
-                                    labels_[current:current+batch_size]
-                            },
-                            # options=tf.compat.v1.RunOptions(trace_level=tf.RunOptions.FULL_TRACE),
-                            # run_metadata=run_meta
-                        )
-                        # profiler.add_step(batch, run_meta)
-
-                        # Create the Timeline object, and write it to a json file
-                        # fetched_timeline = timeline.Timeline(run_meta.step_stats)
-                        # chrome_trace = fetched_timeline.generate_chrome_trace_format()
-                        # with open('profiler/timeline_%i.json'%batch, 'w') as f:
-                        #     f.write(chrome_trace)
-                        # Profile the parameters of your model.
-                        # profiler.profile_name_scope(options=(tf.compat.v1.profiler.ProfileOptionBuilder
-                        #                                      .trainable_variables_parameter()))
-                        #
-                        # # Or profile the timing of your model operations.
-                        # opts = tf.compat.v1.profiler.ProfileOptionBuilder.time_and_memory()
-                        # profiler.profile_operations(options=opts)
-                        # # Or you can generate a timeline:
-                        # opts = (tf.compat.v1.profiler.ProfileOptionBuilder(
-                        #     tf.compat.v1.profiler.ProfileOptionBuilder.time_and_memory())
-                        #         .with_step(batch)
-                        #         .with_timeline_output('profiler/p.json').build())
-                        # profiler.profile_graph(options=opts)
-                    else:
-                        _, summary, gs = sess.run(
-                            [self.train_op, self.summary, self.global_step],
-                            feed_dict={
-                                self.inputs:
-                                    inputs_[:, current:current+batch_size, :],
-                                self.labels:
-                                    labels_[current:current+batch_size]
-                            }
-                        )
-
-
+                    # if batch % 10 == 0:
+                    #     run_meta = tf.compat.v1.RunMetadata()
+                    #     _, summary, gs = sess.run(
+                    #         [self.train_op, self.summary, self.global_step],
+                    #         feed_dict={
+                    #             self.inputs:
+                    #                 inputs_[:, current:current+batch_size, :],
+                    #             self.labels:
+                    #                 labels_[current:current+batch_size]
+                    #         },
+                    #         options=tf.compat.v1.RunOptions(trace_level=tf.RunOptions.FULL_TRACE),
+                    #         run_metadata=run_meta)
+                    #     profiler.add_step(batch, run_meta)
+                    #
+                    #     # Create the Timeline object, and write it to a json file
+                    #     fetched_timeline = timeline.Timeline(run_meta.step_stats)
+                    #     chrome_trace = fetched_timeline.generate_chrome_trace_format()
+                    #     with open('profiler/timeline_%i.json'%batch, 'w') as f:
+                    #         f.write(chrome_trace)
+                    #
+                    #     # Profile the parameters of your model.
+                    #     profiler.profile_name_scope(options=(tf.compat.v1.profiler.ProfileOptionBuilder
+                    #                                          .trainable_variables_parameter()))
+                    #
+                    #     # Or profile the timing of your model operations.
+                    #     opts = tf.compat.v1.profiler.ProfileOptionBuilder.time_and_memory()
+                    #     profiler.profile_operations(options=opts)
+                    #     # Or you can generate a timeline:
+                    #     opts = (tf.compat.v1.profiler.ProfileOptionBuilder(
+                    #         tf.compat.v1.profiler.ProfileOptionBuilder.time_and_memory())
+                    #             .with_step(batch)
+                    #             .with_timeline_output('profiler/p.json').build())
+                    #     profiler.profile_graph(options=opts)
+                    # else:
+                    _, summary, gs = sess.run(
+                        [self.train_op, self.summary, self.global_step],
+                        feed_dict={
+                            self.inputs:
+                                inputs_[:, current:current+batch_size, :],
+                            self.labels:
+                                labels_[current:current+batch_size]
+                        }
+                    )
                     writer.add_summary(summary, gs)
-
 
                 # monitor per epoch
                 train_loss_ = sess.run(
                     self.loss, feed_dict={self.inputs: inputs_,
                                           self.labels: labels_}
                 )
+                # profiler.profile_name_scope(options=(tf.profiler.ProfileOptionBuilder
+                #                                      .trainable_variables_parameter()))
+                #
+                #
+                # profiler.profile_graph(options=opts)
                 # profiler.advise(opts)
                 valid_loss_ = sess.run(
                     self.loss, feed_dict={self.inputs: inputs_valid_,
