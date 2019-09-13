@@ -9,7 +9,7 @@ Author: YJ Choe (yjchoe33@gmail.com).
 import tensorflow as tf
 
 from data import prepare_data
-from cudnnlstm import CudnnLSTMModel
+from cudnnlstm import CudnnLSTMModel, CudnnGRUModel
 
 # allow global hyperparameters using `tf.app.flags`
 FLAGS = tf.app.flags.FLAGS
@@ -51,7 +51,12 @@ def main(_):
                      seed=FLAGS.seed)
     with tf.device('/device:GPU:0'):
         # initialize model & build TF graph
-        model = CudnnLSTMModel(FLAGS.input_size,
+        # model = CudnnLSTMModel(FLAGS.input_size,
+        #                        FLAGS.num_layers, FLAGS.num_units, FLAGS.direction,
+        #                        FLAGS.learning_rate, FLAGS.dropout, FLAGS.seed,
+        #                        is_training=True)
+
+        model = CudnnGRUModel(FLAGS.input_size,
                                FLAGS.num_layers, FLAGS.num_units, FLAGS.direction,
                                FLAGS.learning_rate, FLAGS.dropout, FLAGS.seed,
                                is_training=True)
